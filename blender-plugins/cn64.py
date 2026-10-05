@@ -149,7 +149,7 @@ class MESH_OT_export_game_objects(bpy.types.Operator):
         
         def getRotation(obj):
             # WXYZ
-            return f"{trim(obj.rotation_quaternion[0])}f, {trim(obj.rotation_quaternion[1])}f, {obj.rotation_quaternion[2]}f, {trim(obj.rotation_quaternion[3])}f"
+            return f"{trim(obj.rotation_quaternion[1])}f, {trim(obj.rotation_quaternion[3])}f, {-obj.rotation_quaternion[2]}f, {trim(obj.rotation_quaternion[0])}f"
         
         def getScale(obj):
             return f"{trim(obj.scale[0])}f * scaleMultiplier, {trim(obj.scale[1])}f * scaleMultiplier, {trim(obj.scale[2])}f * scaleMultiplier"
@@ -239,7 +239,7 @@ class MESH_OT_export_game_objects(bpy.types.Operator):
                 collider = {
                     "TYPE": "COLLIDER_AABB",
                     "POS_X": trim(obj.location[0]),
-                    "POS_Z": trim(obj.location[1]),
+                    "POS_Z": trim(-obj.location[1]),
                     "SCALE_X": trim(obj.scale[0]),
                     "SCALE_Z": trim(obj.scale[1]),
                     "POSITION": "{ " + getPosition(obj) + " }",
@@ -253,12 +253,12 @@ class MESH_OT_export_game_objects(bpy.types.Operator):
                 collider = {
                     "TYPE": "COLLIDER_OBB",
                     "POS_X": trim(obj.location[0]),
-                    "POS_Z": trim(obj.location[1]),
+                    "POS_Z": trim(-obj.location[1]),
                     "SCALE_X": trim(obj.scale[0]),
                     "SCALE_Z": trim(obj.scale[1]),
                     "POSITION": "{ " + getPosition(obj) + " }",
                     "ROTATION": "{ " + getRotation(obj) + " }",
-                    "SCALE": "{ " + getScale(obj) + " }"
+                    "SCALE": "{ " + f"{trim(obj.scale[0])}f * xPositionMultiplier, {trim(obj.scale[2])}f * yPositionMultiplier, {trim(obj.scale[1])}f * zPositionMultiplier" + " }"
                 }
                 colliders.append(collider)
 
