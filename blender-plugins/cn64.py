@@ -10,6 +10,7 @@ bl_info = {
 
 import bpy
 from bpy.props import StringProperty
+from bpy.props import BoolProperty
 import re
 from datetime import datetime
 import math
@@ -53,6 +54,9 @@ class QueryProps(bpy.types.PropertyGroup):
         default="/Users/mikosramek/Documents/n64/pigeon-grabbing/scenes/",
         maxlen=1024,
         subtype='DIR_PATH')
+    collisionsVisible: BoolProperty(default=True)
+    doorsVisible: BoolProperty(default=True)
+    markersVisible: BoolProperty(default=True)
 
 class MESH_OT_copy_rotation(bpy.types.Operator):
     bl_idname = "mesh.copy_rotation"
@@ -524,7 +528,7 @@ class MESH_OT_export_scene(bpy.types.Operator):
 
 class MESH_OT_export_all(bpy.types.Operator):
     bl_idname = "mesh.export_game_level_and_scene"
-    bl_label = "Export game level and scene"
+    bl_label = "Toggle collision models"
     levelName: StringProperty(default="level")
     levelId: StringProperty(default="0")
     sceneFolder: StringProperty(default="/Users/mikosramek/Documents/n64/pigeon-grabbing/scenes/")
@@ -546,6 +550,43 @@ class MESH_OT_export_all(bpy.types.Operator):
             bpy.ops.object.select_all(action='DESELECT')
         bpy.ops.object.select_all(action='DESELECT')
 
+        return {"FINISHED"}
+
+class MESH_OT_toggle_collisions(bpy.types.Operator):
+    bl_idname = "mesh.toggle_collisions"
+    bl_label = "Toggle collision models"
+    visibility: BoolProperty(default=True)
+
+    def execute(self, context):
+        sel_objs = [obj for obj in context.scene.objects if obj.type == 'MESH' and (obj.name.startswith('aabb_') or obj.name.startswith('obb_'))]
+        for obj in sel_objs:
+            obj.hide_set(self.visibility)
+        context.scene.QueryProps.collisionsVisible = not self.visibility
+
+        return {"FINISHED"}
+
+class MESH_OT_toggle_doors(bpy.types.Operator):
+    bl_idname = "mesh.toggle_doors"
+    bl_label = "Toggle door models"
+    visibility: BoolProperty(default=True)
+
+    def execute(self, context):
+        sel_objs = [obj for obj in context.scene.objects if obj.type == 'MESH' and obj.name.startswith('d_')]
+        for obj in sel_objs:
+            obj.hide_set(self.visibility)
+        context.scene.QueryProps.doorsVisible = not self.visibility
+        return {"FINISHED"}
+
+class MESH_OT_toggle_markers(bpy.types.Operator):
+    bl_idname = "mesh.toggle_markers"
+    bl_label = "Toggle marker models"
+    visibility: BoolProperty(default=True)
+
+    def execute(self, context):
+        sel_objs = [obj for obj in context.scene.objects if obj.type == 'MESH' and (obj.name.startswith('sp_'))]
+        for obj in sel_objs:
+            obj.hide_set(self.visibility)
+        context.scene.QueryProps.markersVisible = not self.visibility
         return {"FINISHED"}
 
 class VIEW3D_PT_game_export(bpy.types.Panel):
@@ -585,12 +626,23 @@ class VIEW3D_PT_game_export(bpy.types.Panel):
         both.levelName = props.level_name
         both.levelId = props.level_id
 
+        self.layout.label(text="Toggle Objects")
+        row = self.layout.row()
+        button = row.operator("mesh.toggle_collisions", text="Collisions")
+        button.visibility = props.collisionsVisible
+        button = row.operator("mesh.toggle_doors", text="Doors")
+        button.visibility = props.doorsVisible
+        button = row.operator("mesh.toggle_markers", text="Markers")
+        button.visibility = props.markersVisible
+
 
         self.layout.label(text="Copy to active object")
         row = self.layout.row()
         row.operator("mesh.copy_rotation", text="Q-Rot")
         row.operator("mesh.copy_location", text="Location")
         row.operator("mesh.copy_scale", text="Scale")
+
+
 
 def register():
     bpy.utils.register_class(QueryProps);
@@ -601,6 +653,9 @@ def register():
     bpy.utils.register_class(MESH_OT_export_level);
     bpy.utils.register_class(MESH_OT_export_scene);
     bpy.utils.register_class(MESH_OT_export_all);
+    bpy.utils.register_class(MESH_OT_toggle_collisions);
+    bpy.utils.register_class(MESH_OT_toggle_doors);
+    bpy.utils.register_class(MESH_OT_toggle_markers);
     bpy.utils.register_class(VIEW3D_PT_game_export);
     bpy.types.Scene.QueryProps = bpy.props.PointerProperty(type=QueryProps)
     
@@ -613,6 +668,9 @@ def unregister():
     bpy.utils.unregister_class(MESH_OT_export_level);
     bpy.utils.unregister_class(MESH_OT_export_scene);
     bpy.utils.unregister_class(MESH_OT_export_all);
+    bpy.utils.unregister_class(MESH_OT_toggle_collisions);
+    bpy.utils.unregister_class(MESH_OT_toggle_doors);
+    bpy.utils.unregister_class(MESH_OT_toggle_markers);
     bpy.utils.unregister_class(VIEW3D_PT_game_export);
     del(bpy.types.Scene.QueryProps)
     
